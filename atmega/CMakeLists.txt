@@ -4,7 +4,26 @@
 
 include(${PROJECT_SOURCE_DIR}/freertos/freertos.cmake)
 
+SET(RTOS_DIR ${PROJECT_SOURCE_DIR}/external/avr-freertos)
+
+if(NOT CONFIG_STANDALONE)
+SET(RTOS_SOURCES
+	${RTOS_DIR}/croutine.c
+	${RTOS_DIR}/event_groups.c
+	${RTOS_DIR}/MemMang/heap_3.c
+	${RTOS_DIR}/list.c
+	${RTOS_DIR}/portable/port.c
+	${RTOS_DIR}/queue.c
+	${RTOS_DIR}/stream_buffer.c
+	${RTOS_DIR}/tasks.c
+	${RTOS_DIR}/timers.c
+	${RTOS_DIR}/hooks.c
+)
+endif()
+
 set(AVR_GENERIC_SOURCES
+	${RTOS_SOURCES}
+	${PROJECT_SOURCE_DIR}/atmega/system_tick.S
 	${PROJECT_SOURCE_DIR}/atmega/avr-i2c.c
 	${PROJECT_SOURCE_DIR}/atmega/avrspi.c
 	${PROJECT_SOURCE_DIR}/atmega/gpio/avr.c
@@ -21,7 +40,10 @@ set(AVR_GENERIC_SOURCES
 	${PROJECT_SOURCE_DIR}/atmega/soc/cplusplus.cpp
 	${PROJECT_SOURCE_DIR}/atmega/soc/critical.c
 	${PROJECT_SOURCE_DIR}/atmega/soc/avr.c
+	${PROJECT_SOURCE_DIR}/atmega/soc/extmem.c
 )
+
+set_source_files_properties(system_tick.S PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
 
 if(CONFIG_STANDALONE)
 	set(PORT_SOURCE_FILES
@@ -42,5 +64,8 @@ INSTALL(TARGETS lwiot-platform
 
 INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/atmega/include/ DESTINATION include)
 
-#target_include_directories(lwiot-platform PUBLIC ${PORT_INCLUDE_DIR})
+if(NOT CONFIG_STANDAONE)
+	INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/external/avr-freertos/include/ DESTINATION include)
+endif()
+
 include_directories(lwiot-platform PUBLIC ${PROJECT_SOURCE_DIR}/lwiot-core/include ${CMAKE_BINARY_DIR} ${PORT_INCLUDE_DIR})

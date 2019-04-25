@@ -15,20 +15,6 @@
 
 __extension__ typedef int __guard __attribute__((mode (__DI__)));
 
-extern "C" {
-#ifdef AVR
-#if __cplusplus >= 201402L
-	void __attribute__((weak)) operator delete(void *ptr, size_t size) noexcept
-	{
-		::operator delete(ptr);
-	}
-
-	void __attribute__((weak)) operator delete[](void *ptr, size_t size) noexcept
-	{
-		::operator delete(ptr);
-	}
-#endif
-
 void *operator new(size_t num)
 {
 	auto ptr = lwiot_mem_alloc(num);
@@ -61,36 +47,50 @@ void operator delete[](void *ptr)
 	free(ptr);
 }
 
-int atexit( void (*func)(void))
+#if __cplusplus >= 201402L
+void __attribute__((weak)) operator delete(void *ptr, size_t size) noexcept
 {
-	return -1;
+	::operator delete(ptr);
+}
+
+void __attribute__((weak)) operator delete[](void *ptr, size_t size) noexcept
+{
+	::operator delete(ptr);
 }
 #endif
 
-int __cxa_guard_acquire(__guard *g) 
-{
-	return !*(char *)(g);
-}
+extern "C" {
+	int atexit(void (*func)(void))
+	{
+		return -1;
+	}
 
-void __cxa_guard_release (__guard *g) 
-{
-	*(char *)g = 1;
-}
+	int __cxa_guard_acquire(__guard *g)
+	{
+		return !*(char *) (g);
+	}
 
-extern void __cxa_pure_virtual(void) __attribute__((weak));
-void __cxa_pure_virtual(void)
-{
-	printf("Virtual function not implemented (%s:%i)", __FILE__, __LINE__);
-	for(;;);
-}
+	void __cxa_guard_release(__guard *g)
+	{
+		*(char *) g = 1;
+	}
 
-void __cxa_guard_abort (__guard *g)
-{
-	for(;;);
-}
+	extern void __cxa_pure_virtual(void) __attribute__((weak));
+	void __cxa_pure_virtual(void)
+	{
+		printf("Virtual function not implemented (%s:%i)", __FILE__, __LINE__);
+		for(;;);
+	}
 
-extern void __gxx_personality_v0(void) __attribute__((weak));
-void __gxx_personality_v0(void)
-{ }
+	void __cxa_guard_abort(__guard *g)
+	{
+		for(;;);
+	}
 
-}
+	extern void __gxx_personality_v0(void) __attribute__((weak));
+	void __gxx_personality_v0(void)
+	{
+	}
+
+	}
+

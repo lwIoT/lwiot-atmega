@@ -10,5 +10,5 @@
 #include <lwiot.h>
 
 CDECL
-extern void extmem_enable(int pin);
+extern void avr_sre(int pin);
 CDECL_END
