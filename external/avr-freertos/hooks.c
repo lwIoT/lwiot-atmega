@@ -30,13 +30,13 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 
-#include <util/delay.h>
-
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
 #include "stack_macros.h"
+
+extern void lwiot_mdelay(int ms);
 
 /*-----------------------------------------------------------*/
 #if ( configUSE_IDLE_HOOK == 1 )
@@ -262,14 +262,16 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 	UBRR0 = baud;
 
 	/* Send out the message, without interrupts.  Hard wired to USART 0 */
-	while ( *pC )
-	{
+	while ( *pC ) {
 		while (!(UCSR0A & (1 << UDRE0)));
 		UDR0 = *pC;
 		pC++;
 	}
 
-	while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
+	while(1) {
+		PINB |= _BV(PINB7);
+		lwiot_mdelay(100);
+	}
 }
 
 #endif /* configCHECK_FOR_STACK_OVERFLOW >= 1 */
