@@ -13,12 +13,15 @@ endif ()
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-Os")
 SET(CMAKE_C_FLAGS_RELEASE "-Os")
-SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb -g3")
-SET(CMAKE_C_FLAGS_DEBUG "-ggdb -g3")
+SET(CMAKE_ASM_FLAGS_RELEASE "")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -gdwarf-2 -Os")
+SET(CMAKE_C_FLAGS_DEBUG "-g -gdwarf-2 -Os")
+SET(CMAKE_ASM_FLAGS_DEBUG "")
 SET(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
 SET(CMAKE_C_FLAGS_MINSIZEREL  "-Os")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS_EXTRA} ${PORT_C_FLAGS} -Wall")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS_EXTRA} ${PORT_CXX_FLAGS} -fstrict-enums -Wall")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS_EXTRA} ${PORT_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS_EXTRA} ${PORT_CXX_FLAGS} -fstrict-enums -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare")
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_C_STANDARD 11)
 
@@ -55,6 +58,8 @@ CHECK_C_SOURCE_COMPILES (
         return 0;
     }
   " HAVE_SIZE_T)
+
+include(${PROJECT_SOURCE_DIR}/cmake/freertos-type-check.cmake)
 
 add_subdirectory(lwiot-core)
 add_subdirectory(atmega)

@@ -37,7 +37,7 @@ namespace lwiot { namespace avr
 
 	void I2CAlgorithm::setFrequency(const uint32_t& freq)
 	{
-		/* Variadic frequencies not yet supported. */
+		UNUSED(freq);
 	}
 
 	ssize_t I2CAlgorithm::transfer(I2CMessage& msg)

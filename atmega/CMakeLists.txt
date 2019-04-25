@@ -2,8 +2,6 @@
 # AVR platform build file.
 #
 
-include(${PROJECT_SOURCE_DIR}/freertos/freertos.cmake)
-
 SET(RTOS_DIR ${PROJECT_SOURCE_DIR}/external/avr-freertos)
 
 if(NOT CONFIG_STANDALONE)
