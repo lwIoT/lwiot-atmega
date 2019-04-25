@@ -9,6 +9,7 @@
 #include "lwiot_arch.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <lwiot.h>
@@ -70,7 +71,7 @@ void lwiot_sleep(int ms)
 		delay_ms();
 }
 
-static volatile uint64_t sys_tick = 0ULL;
+static volatile time_t sys_tick = 0UL;
 
 void no_os_init(void)
 {
@@ -83,11 +84,12 @@ void no_os_init(void)
 	TIMSK0 = _BV(TOIE0);
 	TCCR0A = _BV(WGM00) | _BV(WGM01);
 	TCCR0B = _BV(WGM02) | _BV(CS00) | _BV(CS01);
+	sei();
 }
 
 time_t lwiot_tick(void)
 {
-	return sys_tick * 1000ULL;
+	return sys_tick * 1000UL;
 }
 
 time_t lwiot_tick_ms(void)
@@ -95,12 +97,10 @@ time_t lwiot_tick_ms(void)
 	return sys_tick;
 }
 
-#ifndef OLD_STYLE_TIMERS
-ISR(TIMER0_OVF_vect)
+SIGNAL(TIMER0_OVF_vect)
 {
-	sys_tick += 1ULL;
+	sys_tick += 1UL;
 }
-#endif
 
 lwiot_mutex_t* lwiot_mutex_create(const uint32_t flags)
 {
