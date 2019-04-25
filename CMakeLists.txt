@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(lwiot-atmega)
+project(lwiot-atmega C CXX ASM)
 
 include(CMakeToolsHelpers OPTIONAL)
 include(CheckIncludeFiles)
@@ -11,8 +11,8 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     set(HAVE_DEBUG True)
 endif ()
 
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-SET(CMAKE_C_FLAGS_RELEASE "-O3")
+SET(CMAKE_CXX_FLAGS_RELEASE "-Os")
+SET(CMAKE_C_FLAGS_RELEASE "-Os")
 SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb -g3")
 SET(CMAKE_C_FLAGS_DEBUG "-ggdb -g3")
 SET(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
