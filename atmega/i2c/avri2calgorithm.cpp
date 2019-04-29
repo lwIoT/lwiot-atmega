@@ -60,7 +60,7 @@ namespace lwiot { namespace avr
 				total += retval;
 			} else {
 				if(msg.repstart())
-					i2c_stop();
+					i2c_write_stop();
 
 				return retval;
 			}

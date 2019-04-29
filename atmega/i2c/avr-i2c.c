@@ -28,7 +28,7 @@ void avr_i2c_init(void)
 	TWBR = TWBR_val;
 }
 
-uint8_t i2c_start(uint8_t address)
+uint8_t i2c_write_start(uint8_t address)
 {
 	TWCR = 0;
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
@@ -76,9 +76,21 @@ uint8_t i2c_read_nack(void)
 	return TWDR;
 }
 
+uint8_t i2c_read(bool ack)
+{
+	uint8_t byte;
+
+	if(ack)
+		byte = i2c_read_ack();
+	else
+		byte = i2c_read_nack();
+
+	return byte;
+}
+
 uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length, uint8_t stop)
 {
-	if (i2c_start(address | I2C_WRITE))
+	if (i2c_write_start(address | I2C_WRITE))
 		return 1;
 	
 	for (uint16_t i = 0; i < length; i++) {
@@ -86,14 +98,14 @@ uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length, uint8_t st
 	}
 
 	if(stop)
-		i2c_stop();
+		i2c_write_stop();
 
 	return 0;
 }
 
 uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length, uint8_t stop)
 {
-	if (i2c_start(address | I2C_READ))
+	if (i2c_write_start(address | I2C_READ))
 		return 1;
 	
 	for (uint16_t i = 0; i < (length-1); i++) {
@@ -103,14 +115,14 @@ uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length, uint8_t sto
 	data[(length-1)] = i2c_read_nack();
 
 	if(stop)
-		i2c_stop();
+		i2c_write_stop();
 	
 	return 0;
 }
 
 uint8_t i2c_writeReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
 {
-	if (i2c_start(devaddr | 0x00))
+	if (i2c_write_start(devaddr | 0x00))
 		return 1;
 
 	i2c_write(regaddr);
@@ -120,18 +132,18 @@ uint8_t i2c_writeReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t l
 			return 1;
 	}
 
-	i2c_stop();
+	i2c_write_stop();
 	return 0;
 }
 
 uint8_t i2c_readReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
 {
-	if (i2c_start(devaddr))
+	if (i2c_write_start(devaddr))
 		return 1;
 
 	i2c_write(regaddr);
 
-	if (i2c_start(devaddr | 0x01))
+	if (i2c_write_start(devaddr | 0x01))
 		return 1;
 
 	for (uint16_t i = 0; i < (length-1); i++) {
@@ -139,12 +151,12 @@ uint8_t i2c_readReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t le
 	}
 
 	data[(length-1)] = i2c_read_nack();
-	i2c_stop();
+	i2c_write_stop();
 
 	return 0;
 }
 
-void i2c_stop(void)
+void i2c_write_stop(void)
 {
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
 }

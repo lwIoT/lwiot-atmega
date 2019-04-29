@@ -22,13 +22,14 @@ endif()
 set(AVR_GENERIC_SOURCES
 	${RTOS_SOURCES}
 	${PROJECT_SOURCE_DIR}/atmega/system_tick.S
-	${PROJECT_SOURCE_DIR}/atmega/avr-i2c.c
-	${PROJECT_SOURCE_DIR}/atmega/avrspi.c
 	${PROJECT_SOURCE_DIR}/atmega/gpio/avr.c
+	${PROJECT_SOURCE_DIR}/atmega/avrspi.c
+	${PROJECT_SOURCE_DIR}/atmega/i2c/avr-i2c.c
+	${PROJECT_SOURCE_DIR}/atmega/i2c/i2c.c
+	${PROJECT_SOURCE_DIR}/atmega/i2c/avri2calgorithm.cpp
 
 	${PROJECT_SOURCE_DIR}/atmega/avradcchip.cpp
 	${PROJECT_SOURCE_DIR}/atmega/system_tick.S
-	${PROJECT_SOURCE_DIR}/atmega/avri2calgorithm.cpp
 	${PROJECT_SOURCE_DIR}/atmega/avrspibus.cpp
 	${PROJECT_SOURCE_DIR}/atmega/avruart.cpp
 	${PROJECT_SOURCE_DIR}/atmega/avrwatchdog.cpp
