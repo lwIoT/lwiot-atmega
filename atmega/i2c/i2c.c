@@ -19,16 +19,17 @@
 
 #include "avri2c.h"
 
-#define ATMEGA_MAX_MSGS 8
+#define ATMEGA_MAX_MSGS 12
 
-#define CMD_STA 1
-#define CMD_STO 2
-#define CMD_REPSTA 4
-#define CMD_RD 8
-#define CMD_ACK 16
+#define CMD_STA 1U
+#define CMD_STO 2U
+#define CMD_REPSTA 4U
+#define CMD_RD 8U
+#define CMD_ACK 16U
 
 struct i2c_msg {
 	uint8_t *buff;
+	uint8_t sla;
 	size_t len;
 	uint8_t flags;
 };
@@ -36,17 +37,9 @@ struct i2c_msg {
 #define cbi(port,bit) \
 	(port) &= ~(1 << (bit))
 
-static volatile bool tw_if_busy = false;
-
 static volatile uint8_t msg_index = 0;
 static volatile uint8_t msg_num = 0;
 static struct i2c_msg xfer_msgs[ATMEGA_MAX_MSGS];
-
-void i2c_setup(int scl, int sda)
-{
-	tw_if_busy = false;
-	TWCR = _BV(TWEN) | _BV(TWEA);
-}
 
 void i2c_set_frequency(uint32_t freq)
 {
@@ -55,42 +48,50 @@ void i2c_set_frequency(uint32_t freq)
 	TWBR = (uint8_t ) (((F_CPU / freq) - 16) / 2);
 }
 
+void i2c_disable()
+{
+	cbi(TWCR, TWEA);
+	cbi(TWCR, TWEN);
+	cbi(TWCR, TWIE);
+}
+
+void i2c_setup(int scl, int sda, uint32_t freq)
+{
+	TWCR = _BV(TWEN) | _BV(TWEA);
+	i2c_set_frequency(freq);
+}
+
 void i2c_reset()
 {
+	memset(xfer_msgs, 0, sizeof(xfer_msgs));
+	msg_index = 0;
+	msg_num = 0;
 }
 
-void i2c_start(uint16_t sla)
+void i2c_start(uint16_t sla, bool repeated)
 {
-	struct i2c_msg *msg ;
+	struct i2c_msg *msg;
+
+	msg = &xfer_msgs[msg_index];
+	msg->sla = (uint8_t) sla;
+
+	if(repeated)
+		msg->flags |= CMD_REPSTA;
+	else
+		msg->flags |= CMD_STA;
+
+	msg->buff = (uint8_t *) &msg->sla;
+	msg->len = sizeof(uint8_t);
 
 	msg_index += 1;
 	msg_num += 1;
-	msg = &xfer_msgs[msg_index];
-
-	msg->flags |= CMD_STA;
-	msg->buff = (uint8_t *)&sla;
-	msg->len = sizeof(uint8_t);
-}
-
-void i2c_repeated_start(uint16_t sla)
-{
-	struct i2c_msg *msg ;
-
-	msg_index += 1;
-	msg_num += 1;
-
-	msg = &xfer_msgs[msg_index];
-
-	msg->flags |= CMD_REPSTA;
-	msg->buff = (uint8_t *)&sla;
-	msg->len = sizeof(uint8_t);
 }
 
 void i2c_stop()
 {
 	struct i2c_msg *msg ;
 
-	msg = &xfer_msgs[msg_index];
+	msg = &xfer_msgs[msg_index - 1];
 	msg->flags |= CMD_STO;
 }
 
@@ -98,34 +99,37 @@ void i2c_write_byte(const uint8_t *byte, bool ack)
 {
 	struct i2c_msg *msg ;
 
-	msg_index += 1;
-	msg_num += 1;
-
 	msg = &xfer_msgs[msg_index];
 	msg->buff = (uint8_t*) byte;
 	msg->len = sizeof(*byte);
 
+	if(ack)
+		msg->flags = CMD_ACK;
+
+	msg_index += 1;
+	msg_num += 1;
 }
 
 void i2c_write_buffer(const uint8_t *bytes, size_t length, bool ack)
 {
 	struct i2c_msg *msg ;
 
-	msg_index += 1;
-	msg_num += 1;
+	UNUSED(ack);
 
 	msg = &xfer_msgs[msg_index];
 	msg->buff = (uint8_t*) bytes;
 	msg->len = length;
-	UNUSED(ack);
+
+	if(ack)
+		msg->flags |= CMD_ACK;
+
+	msg_index += 1;
+	msg_num += 1;
 }
 
 void i2c_read_byte(uint8_t* byte, bool ack)
 {
 	struct i2c_msg *msg ;
-
-	msg_index += 1;
-	msg_num += 1;
 
 	msg = &xfer_msgs[msg_index];
 	msg->buff = byte;
@@ -135,14 +139,14 @@ void i2c_read_byte(uint8_t* byte, bool ack)
 		msg->flags |= CMD_ACK;
 
 	msg->flags |= CMD_RD;
+
+	msg_index += 1;
+	msg_num += 1;
 }
 
 void i2c_read_buffer(uint8_t* bytes, size_t length, bool ack)
 {
 	struct i2c_msg *msg ;
-
-	msg_index += 1;
-	msg_num += 1;
 
 	msg = &xfer_msgs[msg_index];
 	msg->buff = bytes;
@@ -152,21 +156,23 @@ void i2c_read_buffer(uint8_t* bytes, size_t length, bool ack)
 		msg->flags |= CMD_ACK;
 
 	msg->flags |= CMD_RD;
+
+	msg_index += 1;
+	msg_num += 1;
 }
 
-void i2c_write_buffers()
+int i2c_write_buffers()
 {
 	struct i2c_msg *msg;
 
-	enter_critical();
 	msg_index = 0;
-	tw_if_busy = true;
 
 	for(int idx = 0; idx < msg_num; idx++) {
 		msg = &xfer_msgs[idx];
 
-		if(msg->flags & CMD_STA) {
+		if(msg->flags & CMD_STA || msg->flags & CMD_REPSTA) {
 			i2c_write_start(msg->buff[0]);
+			continue;
 		}
 
 		if((msg->flags & CMD_RD) != 0) {
@@ -175,13 +181,14 @@ void i2c_write_buffers()
 			}
 		} else {
 			for(int j = 0; j < msg->len; j++) {
-				bool ack = i2c_write(msg->buff[j]) != 0;
-				bool expected = (msg->flags & CMD_ACK) != 0;
+				uint8_t ack = !i2c_write(msg->buff[j]);
+				uint8_t expected = (msg->flags & CMD_ACK) != 0;
 
-				if(ack ^ expected) {
-					exit_critical();
-					print_dbg("ACK not received!");
-					return;
+				expected = expected && (j+1) < msg->len;
+
+				if(expected && !ack) {
+					print_dbg("ACK not received!\n");
+					return -EINVALID;
 				}
 			}
 		}
@@ -191,5 +198,5 @@ void i2c_write_buffers()
 		}
 	}
 
-	exit_critical();
+	return -EOK;
 }
