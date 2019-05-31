@@ -37,7 +37,7 @@ namespace lwiot { namespace avr
 		using lwiot::SpiBus::transfer;
 
 	protected:
-		virtual bool transfer(const uint8_t* tx, uint8_t* rx, size_t length) override;
+		bool transfer(SpiMessage& msg) override;
 
 	private:
 		uint32_t _frequency;

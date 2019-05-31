@@ -54,9 +54,9 @@ namespace lwiot { namespace avr
 		atmega_spi_setspeed(frequency);
 	}
 
-	bool SpiBus::transfer(const uint8_t* tx, uint8_t* rx, size_t length)
+	bool SpiBus::transfer(lwiot::SpiMessage &msg)
 	{
-		return static_cast<size_t>(atmega_spi_xfer(tx, rx, length)) == length;
+		return atmega_spi_xfer(msg.txdata().data(), msg.rxdata().data(), msg.size()) == msg.size();
 	}
 }
 }
