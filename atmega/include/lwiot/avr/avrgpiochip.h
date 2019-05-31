@@ -119,6 +119,7 @@ namespace lwiot { namespace avr
 		virtual void setOpenDrain(int pin) override;
 		virtual void odWrite(int pin, bool value) override;
 		virtual void attachIrqHandler(int pin, irq_handler_t handler, IrqEdge edge) override;
+		void detachIrqHandler(int pin) override;
 
 	private:
 		int mapIrqEdge(const IrqEdge& edge) const;
