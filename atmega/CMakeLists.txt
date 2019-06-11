@@ -25,8 +25,7 @@ set(AVR_GENERIC_SOURCES
 	${PROJECT_SOURCE_DIR}/atmega/gpio/avr.c
 	${PROJECT_SOURCE_DIR}/atmega/avrspi.c
 	${PROJECT_SOURCE_DIR}/atmega/i2c/avr-i2c.c
-	${PROJECT_SOURCE_DIR}/atmega/i2c/i2c.c
-	${PROJECT_SOURCE_DIR}/atmega/i2c/avri2calgorithm.cpp
+	${PROJECT_SOURCE_DIR}/atmega/hardwarei2calgorithm.cpp
 
 	${PROJECT_SOURCE_DIR}/atmega/avradcchip.cpp
 	${PROJECT_SOURCE_DIR}/atmega/system_tick.S
