@@ -13,8 +13,9 @@
 #include <lwiot/io/gpiopin.h>
 #include <lwiot/io/watchdog.h>
 #include <lwiot/io/i2cbus.h>
-#include <lwiot/io/hardwarei2calgorithm.h>
 #include <lwiot/io/gpiopin.h>
+#include <lwiot/io/hardwarei2calgorithm.h>
+#include <lwiot/avr/hardwarei2calgorithm.h>
 
 #include <lwiot/util/datetime.h>
 
@@ -78,7 +79,7 @@ void run(void)
 	lwiot::GpioPin led(13);
 	
 	lwiot::GpioPin scl(19), sda(18);
-	lwiot::HardwareI2CAlgorithm *algo = new lwiot::HardwareI2CAlgorithm(scl, sda, 400000);
+	lwiot::HardwareI2CAlgorithm *algo = new lwiot::avr::HardwareI2CAlgorithm(scl, sda, 400000);
 	lwiot::I2CBus bus(algo);
 
 	led.output();
