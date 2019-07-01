@@ -28,7 +28,7 @@ extern "C" void uart_init(void);
 static void testRead(lwiot::I2CBus& bus)
 {
 	lwiot::I2CMessage wr(1), rd(3);
-	lwiot::stl::Vector<lwiot::I2CMessage*> msgs;
+	lwiot::stl::Vector<lwiot::I2CMessage> msgs;
 
 	wr.setAddress(0x6B, false, false);
 	wr.write(1);
@@ -37,8 +37,8 @@ static void testRead(lwiot::I2CBus& bus)
 	rd.setAddress(0x6B, false, true);
 	rd.setRepeatedStart( false);
 
-	msgs.pushback(&wr);
-	msgs.pushback(&rd);
+	msgs.pushback(lwiot::stl::move(wr));
+	msgs.pushback(lwiot::stl::move(rd));
 
 	if(bus.transfer(msgs)) {
 		print_dbg("Read test successfull!\n");
@@ -46,7 +46,8 @@ static void testRead(lwiot::I2CBus& bus)
 		print_dbg("Read test failed!\n");
 	}
 
-	auto& msg = *msgs[1];
+	auto msg = lwiot::stl::move(msgs.back());
+
 	print_dbg("Read data:\n");
 	print_dbg("\t1: %u\n", msg[0]);
 	print_dbg("\t2: %u\n", msg[1]);
@@ -99,7 +100,6 @@ int main(void)
 	uart_init();
 	lwiot_init();
 
-	//printf("AVR lwIoT test started..\n");
 	run();
 
 	return -1;
